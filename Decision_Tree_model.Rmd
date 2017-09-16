@@ -1,0 +1,165 @@
+---
+title: "A Decision Tree model for Bank Marketing Analysis"
+author: "Fábio Rocha Campos"
+date: "16 de setembro de 2017"
+output: 
+  html_document: 
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 8
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(C50)
+library(gmodels)
+library(xtable)
+```
+
+### Summary
+
+The bank marketing campaigns are dependent on customers´ data. The size of these data is so huge that is impossible for a Data Analyst extract good information that could help in the decision-making process.
+
+Machine Learning models are completely helping in the performance of these campaings. So, this text shows a brief test of Decision Tree model to analyse a marketing campaigns. 
+
+The results show that the model are fitted to evaluate train data considering that errors is so low (6.4%) and the accuracy in the test set is 90.8%.
+
+### Bank marketing Dataset
+
+This dataset has been dowloaded from UCI Machine Learning Repository. Is related with direct marketing campaigns of a Portuguese banking institution. The marketing campaigns were based on phone calls. Often, more than one contact to the same client was required, in order to access if the product (bank term deposit) would be ('yes') or not ('no') subscribed.
+
+All the features are described here: <http://goo.gl/i4YyPs>
+
+The goal is to build models which predict if the client will subscribe a term deposit(y)
+
+```{r echo=FALSE}
+### Load data
+df <- read.csv("./data/bank-additional-full.csv", header = TRUE, sep = ";")
+dfcat <- df
+```
+
+
+### Exploratory analysis
+
+**Check the atributes**
+```{r, echo=FALSE, comment= ""}
+str(dfcat)
+```
+
+**Dimensions of Data**
+```{r}
+dim(dfcat)
+```
+
+**Summary Data**
+
+***Social analysis***
+
+```{r, echo=FALSE}
+ par(mfrow=c(2,2))
+hist(dfcat$age, main = "Age", col = "light blue", xlab = "Age", freq = FALSE)
+lines(density(dfcat$age), col="blue", lwd=2) # add a density estimate with defaults
+lines(density(dfcat$age, adjust=2), lty="dotted", col="darkgreen", lwd=2) 
+plot(df$job, xlab = "Type of Jobs", main = "Jobs", ylab = "Frequencies", col = "light blue", ylim = c(0,12000), cex.names=.50)
+plot(dfcat$marital, xlab = "Status", ylab = "Frequencies", main = "Marital Status", col = "blue", ylim=c(0,30000))
+plot(df$education, xlab = "Type of Education", main = "Education", ylab = "Frequencies", col = "blue", ylim = c(0,15000), cex.names=.55)
+```
+
+
+***Credit profile***
+
+```{r, echo=FALSE}
+par(mfrow=c(2,2))
+plot(dfcat$default, xlab = "Status", ylab = "Frequencies", main = "has credit in default?", col = "red", ylim=c(0,35000))
+plot(df$housing, xlab = "Status", main = "has housing loan?", ylab = "Frequencies", col = "red", ylim = c(0,25000))
+plot(dfcat$loan, xlab = "Status", main = "has a personal loan?", ylab = "Frequencies", col = "red", ylim = c(0,40000))
+```
+
+**Duration of Call Feature**
+
+```{r, echo=FALSE}
+duration <- summary(dfcat$duration)
+print(duration)
+```
+
+### Create Training and Test set
+
+We will use the C5.0 algorithm in the C50 package to train our decision tree model.Compared to the machine learning approaches we used previously,
+the C5.0 algorithm offers many more ways to tailor the model to a particular learning problem.
+
+Create a training and testing set, which can be used to train the dataset and test those values with the test set.
+
+```{r}
+set.seed(123)
+train_sample <- sample(41188, 37069)
+df_train <- dfcat[train_sample,]
+df_test <- dfcat[-train_sample,]
+```
+
+Look the proportion of outcome categories. 
+
+```{r}
+prop.table(table(df_train$y))
+```
+
+Now we create a model using C5.0
+```{r}
+cmodel <- C5.0(df_train[-21], df_train$y)
+```
+
+**Results of train model**
+
+Evaluation on training data (37069 cases):
+
+	    Decision Tree   
+	  ----------------  
+	  Size      Errors  
+
+	   315 2371( 6.4%)   <<
+
+
+	   (a)   (b)    <-classified as
+	  ----  ----
+	 31988   887    (a): class no
+	  1484  2710    (b): class yes
+
+The Errors output notes that the model correctly classified all but 2371 of the
+37069 training instances for an error rate of 6.4 percent. A total of 887 actual no values were incorrectly classified as no (false positives), while 1484 yes values were misclassified as no (false negatives).
+
+Top 5 attribute usage
+
+	100.00%	duration
+	100.00%	poutcome
+	 92.69%	nr.employed
+	 76.71%	age
+	 75.88%	month
+
+### Evaluate model performance
+
+To apply our decision tree to the test dataset, we use the predict() function,
+as shown in the following line of code:
+
+```{r}
+### Evaluate model performance
+cmodel_pred <- predict(cmodel, df_test)
+
+### Cross table validation
+CrossTable(df_test$y, cmodel_pred,
+           prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE,
+           dnn = c('actual default', 'predicted default'))
+```
+
+Out of the 4119 test y application records, our model correctly predicted 
+3527 and 214 did correctly, resulting in an accuracy of .908 percent and
+an error rate of 9.2 percent. This is a good performance for this kind of model although it´s necessary do more analysis and comparing with other classification models. 
+
+### Conclusions
+
+The results show that the model are fitted to evaluate train data considering that errors is so low (6.4%) and the accuracy in the test set is 90.8%.
+
+### Reference
+
+[1] [Moro et al., 2014] S. Moro, P. Cortez and P. Rita. A Data-Driven Approach to Predict the Success of Bank Telemarketing. Decision Support Systems, Elsevier, 62:22-31, June 2014
+[2] Max Kuhn, Steve Weston, Nathan Coulter and Mark Culp. C code for C5.0 by R.
+Quinlan (2015). C50: C5.0 Decision Trees and Rule-Based Models. R package
+version 0.1.0-24. https://CRAN.R-project.org/package=C50

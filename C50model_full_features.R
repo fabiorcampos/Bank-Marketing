@@ -32,16 +32,19 @@ prop.table(table(df_train$y))
 rpart <- rpart(y ~ ., data = df_train, method = "class", 
                control = rpart.control(minsplit = 1), parms = list(split = "Information"))
 
-cmodel <- C5.0(df_train[-21], df_train$y)
+cmodel <- C5.0(y ~ ., data = df_train)
 
 ### summary of models training
 rpart
 cmodel
 summary(cmodel)
+summary(rpart)
 
 ### Evaluate model performance
 cmodel_pred <- predict(cmodel, df_test)
 rpart_pred <- predict(rpart, df_test)
+
+rpart_pred_fac <- data.frame(rpart_pred)
 
 ### Cross table validation
 CrossTable(df_test$y, cmodel_pred,
