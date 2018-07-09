@@ -1,6 +1,7 @@
 # Bank-Marketing
-R model to analyse Bank Marketing
-Rpubs publication: [http://rpubs.com/fabiorocha5150/decisiontreemodel]
+Repository and consists of Bank Marketing analisys.
+
+Rpubs publication: [Decision Tree Model](http://rpubs.com/fabiorocha5150/decisiontreemodel)
 
 ### Data Set Information:
 
